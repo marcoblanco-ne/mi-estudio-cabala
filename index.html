@@ -239,7 +239,7 @@ sb.auth.onAuthStateChange((event,session)=>{user=session?.user||null;updateAccou
  applyTheme();applyLanguage();showClock();
  const {data:{session}}=await sb.auth.getSession();user=session?.user||null;updateAccountUI();if(user)await loadCloud();
  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
- setTimeout(()=>{splash.style.opacity='0';setTimeout(()=>splash.remove(),650)},1400);
+ setTimeout(()=>{splash.style.opacity='0';setTimeout(()=>splash.remove(),650)},2500);
 })();
 </script>
 </body></html>
