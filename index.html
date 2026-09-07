@@ -126,13 +126,22 @@ const questions={
 es:[['¿Qué significa Ein Sof?',['Un ángel','Sin Fin / lo ilimitado','Una sefirá'],1],['¿Cuántas sefirot reconoce el sistema?',['7','10','11'],1],['El Árbol de la Vida es…',['Un mapa simbólico','La realidad divina misma','Un horóscopo'],0],['Las sefirot son…',['Dioses independientes','Solo rasgos psicológicos','Modalidades de manifestación'],2],['Da’at significa…',['Reino','Conocimiento','Corona'],1]],
 en:[['What does Ein Sof mean?',['An angel','Without End / the unlimited','A sefirah'],1],['How many sefirot does the system recognize?',['7','10','11'],1],['The Tree of Life is…',['A symbolic map','Divine reality itself','A horoscope'],0],['The sefirot are…',['Independent gods','Only psychological traits','Modalities of manifestation'],2],['Da’at means…',['Kingdom','Knowledge','Crown'],1]]};
 
-const key='kabbalah-study-v3';
-let state=JSON.parse(localStorage.getItem(key)||'null')||{current:1,status:{},notes:{},theme:'light',quiz:{},lang:'es',tree:{}};
+const BASE_KEY='kabbalah-study-v4';
+const freshState=()=>({current:1,status:{},notes:{},theme:'light',quiz:{},lang:'es',tree:{}});
+let activeStorageKey=`${BASE_KEY}-guest`;
+let state=JSON.parse(localStorage.getItem(activeStorageKey)||'null')||freshState();
 let current=state.current||1, user=null, noteTimers={}, syncing=false;
 
+function switchLocalState(uid=null){
+  activeStorageKey=uid?`${BASE_KEY}-user-${uid}`:`${BASE_KEY}-guest`;
+  state=JSON.parse(localStorage.getItem(activeStorageKey)||'null')||freshState();
+  current=state.current||1;
+  applyTheme();
+  applyLanguage();
+}
 function t(){return I[state.lang||'es']}
 function lessons(){const arr=[];stageData[state.lang||'es'].forEach(([stage,names])=>names.forEach(name=>arr.push({n:arr.length+1,name,stage})));return arr}
-function saveLocal(){state.current=current;localStorage.setItem(key,JSON.stringify(state));renderProgress()}
+function saveLocal(){state.current=current;localStorage.setItem(activeStorageKey,JSON.stringify(state));renderProgress()}
 function escapeHtml(s=''){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 async function loadCloud(){
@@ -224,8 +233,8 @@ document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.c
 exportBtn.onclick=()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kabbalah-backup.json';a.click();URL.revokeObjectURL(a.href)};
 importFile.onchange=async()=>{try{const d=JSON.parse(await importFile.files[0].text());state={...state,...d};current=state.current||1;saveLocal();applyTheme();applyLanguage();backupModal.classList.remove('open')}catch{alert(state.lang==='es'?'El archivo no es válido.':'The file is not valid.')}};
 
-accountBtn.onclick=async()=>{if(user){await sb.auth.signOut();user=null;updateAccountUI()}else authModal.classList.add('open')};
-signInBtn.onclick=async()=>{authMsg.textContent='';const {data,error}=await sb.auth.signInWithPassword({email:authEmail.value.trim(),password:authPassword.value});if(error){authMsg.textContent=error.message;return}user=data.user;authModal.classList.remove('open');updateAccountUI();await loadCloud()};
+accountBtn.onclick=async()=>{if(user){await sb.auth.signOut();user=null;switchLocalState(null);updateAccountUI()}else authModal.classList.add('open')};
+signInBtn.onclick=async()=>{authMsg.textContent='';const {data,error}=await sb.auth.signInWithPassword({email:authEmail.value.trim(),password:authPassword.value});if(error){authMsg.textContent=error.message;return}user=data.user;switchLocalState(user.id);authModal.classList.remove('open');updateAccountUI();await loadCloud()};
 signUpBtn.onclick=async()=>{authMsg.textContent='';const {error}=await sb.auth.signUp({email:authEmail.value.trim(),password:authPassword.value,options:{emailRedirectTo:location.origin+location.pathname}});authMsg.textContent=error?error.message:t().confirm};
 
 let seconds=1500,tick=null;function showClock(){const m=Math.floor(seconds/60),s=seconds%60;clock.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;timerBtn.textContent=`◷ ${clock.textContent}`}
@@ -233,13 +242,13 @@ startTimer.onclick=()=>{if(tick){clearInterval(tick);tick=null;startTimer.textCo
 resetTimer.onclick=()=>{clearInterval(tick);tick=null;seconds=1500;startTimer.textContent=t().start;showClock()};
 
 window.addEventListener('online',()=>{setSync(user?t().synced:t().local);if(user)loadCloud()});window.addEventListener('offline',()=>setSync(t().offlineState));
-sb.auth.onAuthStateChange((event,session)=>{user=session?.user||null;updateAccountUI();if(user&&event==='SIGNED_IN')loadCloud()});
+sb.auth.onAuthStateChange((event,session)=>{const nextUser=session?.user||null;if(nextUser){if(!user||user.id!==nextUser.id)switchLocalState(nextUser.id);user=nextUser;updateAccountUI();if(event==='SIGNED_IN')loadCloud()}else{user=null;switchLocalState(null);updateAccountUI()}});
 
 (async function init(){
  applyTheme();applyLanguage();showClock();
- const {data:{session}}=await sb.auth.getSession();user=session?.user||null;updateAccountUI();if(user)await loadCloud();
+ const {data:{session}}=await sb.auth.getSession();user=session?.user||null;if(user)switchLocalState(user.id);else switchLocalState(null);updateAccountUI();if(user)await loadCloud();
  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
- setTimeout(()=>{splash.style.opacity='0';setTimeout(()=>splash.remove(),650)},3500);
+ setTimeout(()=>{splash.style.opacity='0';setTimeout(()=>splash.remove(),650)},2500);
 })();
 </script>
 </body></html>
