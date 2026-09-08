@@ -219,7 +219,14 @@ function applyLanguage(){document.documentElement.lang=state.lang;langSelect.val
  authTitle.textContent=tt.authTitle;authIntro.textContent=tt.authIntro;emailLabel.textContent=tt.email;passwordLabel.textContent=tt.password;signInBtn.textContent=tt.signIn;signUpBtn.textContent=tt.signUp;
  backupTitle.textContent=tt.backupTitle;backupDesc.textContent=tt.backupDesc;exportBtn.textContent=tt.export;importLabel.childNodes[0].nodeValue=tt.import+' ';timerTitle.textContent=tt.timerTitle;startTimer.textContent=tick?tt.pause:tt.start;resetTimer.textContent=tt.reset;treeTitle.textContent=tt.treeTitle;treeIntro.textContent=tt.treeIntro;treeNote.textContent=tt.treeNote;
  legend0.textContent=tt.statuses.not_started;legend1.textContent=tt.statuses.introduced;legend2.textContent=tt.statuses.understood;legend3.textContent=tt.statuses.applied;legend4.textContent=tt.statuses.mastered;
- document.querySelectorAll('[data-close]').forEach(b=>b.textContent=tt.close);updateAccountUI();renderAll();
+ document.querySelectorAll('[data-close]').forEach(b=>{
+  if(b.classList.contains('modal-x')){
+    b.textContent='×';
+    b.setAttribute('aria-label',tt.close);
+  }else{
+    b.textContent=tt.close;
+  }
+});updateAccountUI();renderAll();
 }
 function updateAccountUI(){accountName.textContent=user?.email||'';accountAction.textContent=user?t().signOut:t().signedOut;setSync(user?t().synced:(navigator.onLine?t().local:t().offlineState))}
 function renderTree(){const names={keter:['Keter','Corona / Crown'],chokhmah:['Chokhmah','Sabiduría / Wisdom'],binah:['Binah','Entendimiento / Understanding'],chesed:['Chesed','Misericordia / Lovingkindness'],gevurah:['Gevurah','Rigor / Severity'],tiferet:['Tiferet','Armonía / Harmony'],netzach:['Netzach','Permanencia / Endurance'],hod:['Hod','Esplendor / Splendor'],yesod:['Yesod','Fundamento / Foundation'],malkhut:['Malkhut','Reino / Kingdom']};
