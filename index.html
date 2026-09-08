@@ -8,6 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>Kabbalah</title>
+  <!-- build: close-fix-v2-20260907 -->
   <style>
     :root{--bg:#f5f0e6;--panel:#fffaf0;--ink:#241d16;--muted:#716557;--gold:#9b6a22;--gold2:#d9b56d;--line:#dfd2bd;--ok:#376f58;--shadow:0 16px 45px #5e462015}
     [data-theme="dark"]{--bg:#14110e;--panel:#1e1915;--ink:#f4ead8;--muted:#b8aa97;--gold:#e2b45d;--gold2:#795d2c;--line:#40362c;--ok:#70b694;--shadow:0 16px 45px #0005}
@@ -65,15 +66,15 @@
   <h2 id="authTitle"></h2><p class="small" id="authIntro"></p>
   <div class="field"><label id="emailLabel"></label><input id="authEmail" type="email" autocomplete="email"></div>
   <div class="field"><label id="passwordLabel"></label><input id="authPassword" type="password" minlength="6" autocomplete="current-password"></div>
-  <div class="modal-row"><button class="btn primary" id="signInBtn"></button><button class="btn" id="signUpBtn"></button><button class="btn" data-close></button></div>
+  <div class="modal-row"><button class="btn primary" id="signInBtn"></button><button class="btn" id="signUpBtn"></button><button class="btn" data-close onclick="this.closest('.modal').classList.remove('open')"></button></div>
   <p class="small" id="authMsg"></p>
 </div></div>
 
-<div class="modal" id="backupModal"><div class="modal-box"><h2 id="backupTitle"></h2><p id="backupDesc"></p><div class="modal-row"><button class="btn primary" id="exportBtn"></button><label class="btn" id="importLabel"><input class="hidden-file" type="file" accept="application/json" id="importFile"></label><button class="btn" data-close></button></div></div></div>
+<div class="modal" id="backupModal"><div class="modal-box"><h2 id="backupTitle"></h2><p id="backupDesc"></p><div class="modal-row"><button class="btn primary" id="exportBtn"></button><label class="btn" id="importLabel"><input class="hidden-file" type="file" accept="application/json" id="importFile"></label><button class="btn" data-close onclick="this.closest('.modal').classList.remove('open')"></button></div></div></div>
 
-<div class="modal" id="timerModal"><div class="modal-box timer"><h2 id="timerTitle"></h2><div class="clock" id="clock">25:00</div><div class="modal-row" style="justify-content:center"><button class="btn primary" id="startTimer"></button><button class="btn" id="resetTimer"></button><button class="btn" data-close></button></div></div></div>
+<div class="modal" id="timerModal"><div class="modal-box timer"><h2 id="timerTitle"></h2><div class="clock" id="clock">25:00</div><div class="modal-row" style="justify-content:center"><button class="btn primary" id="startTimer"></button><button class="btn" id="resetTimer"></button><button class="btn" data-close onclick="this.closest('.modal').classList.remove('open')"></button></div></div></div>
 
-<div class="modal" id="treeModal"><div class="modal-box" style="width:min(700px,100%);max-height:94vh;overflow:auto"><button class="modal-x" type="button" data-close aria-label="Cerrar">×</button><h2 id="treeTitle"></h2><p class="small" id="treeIntro"></p><div class="tree-legend"><span><i></i><b id="legend0"></b></span><span><i class="introduced"></i><b id="legend1"></b></span><span><i class="understood"></i><b id="legend2"></b></span><span><i class="applied"></i><b id="legend3"></b></span><span><i class="mastered"></i><b id="legend4"></b></span></div><div class="tree-wrap"><div class="tree" id="tree"></div></div><p class="tree-note" id="treeNote"></p><div class="modal-row"><button class="btn" data-close></button></div></div></div>
+<div class="modal" id="treeModal"><div class="modal-box" style="width:min(700px,100%);max-height:94vh;overflow:auto"><button class="modal-x" type="button" data-close aria-label="Cerrar" onclick="this.closest('.modal').classList.remove('open')">×</button><div style="font-size:11px;color:var(--muted);margin-bottom:4px">build close-fix-v2</div><h2 id="treeTitle"></h2><p class="small" id="treeIntro"></p><div class="tree-legend"><span><i></i><b id="legend0"></b></span><span><i class="introduced"></i><b id="legend1"></b></span><span><i class="understood"></i><b id="legend2"></b></span><span><i class="applied"></i><b id="legend3"></b></span><span><i class="mastered"></i><b id="legend4"></b></span></div><div class="tree-wrap"><div class="tree" id="tree"></div></div><p class="tree-note" id="treeNote"></p><div class="modal-row"><button class="btn" data-close onclick="this.closest('.modal').classList.remove('open')"></button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
