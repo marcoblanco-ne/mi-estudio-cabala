@@ -160,7 +160,7 @@ en:[
 ['What conceptual problem remains open at the end of the lesson?',['How to memorize the names of the ten sefirot','How the limited can relate to an unlimited source','Where Ein Sof is physically located'],1,'The lesson leaves open the relationship between an unlimited source and a limited, differentiated reality; that tension prepares the study of manifestation.']]};
 
 const BASE_KEY='kabbalah-study-v4';
-const ONBOARDING_VERSION=2;
+const ONBOARDING_VERSION=3;
 const freshState=()=>({current:0,onboardingCompleted:false,onboardingVersion:0,resumeAfterOnboarding:1,status:{},notes:{},theme:'light',quiz:{},lang:'es',tree:{}});
 function migrateOnboardingState(){
   const seen=Number(state.onboardingVersion||0);
@@ -257,13 +257,41 @@ function renderContent(){const tt=t();if(current===0){stageLabel.textContent=sta
  else {const is2=current===2,qs=is2?questions2[state.lang]:questions[state.lang],cs=is2?cards2[state.lang]:cards[state.lang],body=is2?lesson2[state.lang]:lesson1[state.lang];content.innerHTML=tabs(`<section class="pane active" data-pane="lesson">${body}</section><section class="pane" data-pane="notes"><h2>${tt.notesTitle}</h2><p class="small">${tt.notesAuto}</p><textarea class="notes" id="notes" placeholder="${tt.notesPlaceholder}">${escapeHtml(state.notes[current]||'')}</textarea></section><section class="pane" data-pane="cards"><h2>${tt.cardsTitle}</h2><div class="flashcard" id="flashcard"></div><div class="flash-actions"><button class="btn" id="flip">${tt.flip}</button><button class="btn primary" id="nextCard">${tt.nextCard}</button></div></section><section class="pane" data-pane="quiz"><h2>${state.lang==='es'?`Examen de la Lección ${current}`:`Lesson ${current} Quiz`}</h2>${is2?`<p class="small">${state.lang==='es'?'El objetivo es demostrar comprensión, no solo memoria. Se requiere 80% para aprobar.':'The goal is to demonstrate understanding, not just memory. 80% is required to pass.'}</p>`:''}<form id="quizForm">${qs.map((q,i)=>`<div class="quiz-q"><b>${i+1}. ${q[0]}</b>${q[1].map((a,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${a}</label>`).join('')}</div>`).join('')}<button class="btn primary" type="submit">${tt.grade}</button><div class="score" id="score"></div><div class="quiz-feedback" id="quizFeedback"></div></form></section>`);content.dataset.cardset=is2?'2':'1'}
  bindContent();
 }
-function bindContent(){document.querySelectorAll('.device-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.device-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.device-panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const panel=document.querySelector(`[data-device-panel="${btn.dataset.device}"]`);if(panel)panel.classList.add('active')});const finish=document.querySelector('#finishOnboarding');if(finish)finish.onclick=()=>{state.onboardingCompleted=true;state.onboardingVersion=ONBOARDING_VERSION;current=Number.isInteger(state.resumeAfterOnboarding)&&state.resumeAfterOnboarding>0?state.resumeAfterOnboarding:1;state.current=current;saveLocal();renderAll();scrollTo({top:0,behavior:'smooth'})};document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>{document.querySelectorAll('.tab,.pane').forEach(y=>y.classList.remove('active'));x.classList.add('active');document.querySelector(`[data-pane="${x.dataset.tab}"]`).classList.add('active')});const n=document.querySelector('#notes');if(n)n.oninput=()=>{state.notes[current]=n.value;saveLocal();cloudNote(current,n.value)};
+function bindContent(){document.querySelectorAll('.device-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.device-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.device-panel').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const panel=document.querySelector(`[data-device-panel="${btn.dataset.device}"]`);if(panel)panel.classList.add('active')});const finish=document.querySelector('#finishOnboarding');if(finish)finish.onclick=()=>completeOnboarding();document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>{document.querySelectorAll('.tab,.pane').forEach(y=>y.classList.remove('active'));x.classList.add('active');document.querySelector(`[data-pane="${x.dataset.tab}"]`).classList.add('active')});const n=document.querySelector('#notes');if(n)n.oninput=()=>{state.notes[current]=n.value;saveLocal();cloudNote(current,n.value)};
  const r=document.querySelector('#lessonReflection');if(r){r.value=state.notes[current]||'';r.oninput=()=>{state.notes[current]=r.value;saveLocal();cloudNote(current,r.value)}}
  document.querySelectorAll('.gate-check').forEach(btn=>btn.onclick=()=>{const box=btn.closest('.check-gate'),picked=box.querySelector('input:checked'),fb=box.querySelector('.gate-feedback');if(!picked){fb.textContent=state.lang==='es'?'Selecciona una respuesta antes de comprobar.':'Select an answer before checking.';fb.classList.add('show');return}const ok=+picked.value===+btn.dataset.answer;fb.textContent=ok?(state.lang==='es'?'Correcto. Explica la idea con tus propias palabras antes de continuar.':'Correct. Explain the idea in your own words before continuing.'):(state.lang==='es'?'Aún no. Relee la explicación inmediatamente anterior y fíjate en la diferencia conceptual, no solo en las palabras.':'Not yet. Reread the explanation immediately above and focus on the conceptual difference, not only the wording.');fb.classList.add('show')});
  let ci=0,flipped=false;const fc=document.querySelector('#flashcard');if(fc){const c=current===2?cards2[state.lang]:cards[state.lang],show=()=>fc.textContent=c[ci][flipped?1:0];show();flip.onclick=()=>{flipped=!flipped;show()};nextCard.onclick=()=>{ci=(ci+1)%c.length;flipped=false;show()}}
  const qf=document.querySelector('#quizForm');if(qf)qf.onsubmit=e=>{e.preventDefault();const qs=current===2?questions2[state.lang]:questions[state.lang];let s=0,ans={};qs.forEach((q,i)=>{const a=qf.querySelector(`[name=q${i}]:checked`);if(a){ans[i]=+a.value;if(+a.value===q[2])s++}});state.quiz[current]=s;saveLocal();const pass=s>=Math.ceil(qs.length*.8);score.textContent=`${state.lang==='es'?'Resultado':'Result'}: ${s} / ${qs.length} — ${pass?t().solid:t().review}`;const review=document.querySelector('#quizFeedback');if(review&&current===2){review.innerHTML=qs.map((q,i)=>{const chosen=ans[i],ok=chosen===q[2];return `<div class="quiz-review ${ok?'correct':''}"><b>${ok?(state.lang==='es'?'✓ Correcta':'✓ Correct'):(state.lang==='es'?'Revisar pregunta ':'Review question ')+(i+1)}</b>${ok?(state.lang==='es'?'Comprendiste este concepto.':'You understood this concept.'):(chosen===undefined?(state.lang==='es'?'No seleccionaste una respuesta. ':'You did not select an answer. '):'')+q[3]}</div>`}).join('')};saveQuiz(current,s,ans,qs.length);if(current===2&&pass&&(state.status[2]||'not_started')==='not_started'){state.status[2]='understood';statusSelect.value='understood';saveLocal();renderNav(search.value);cloudStatus(2,'understood')}}}
 function renderProgress(){const vals=Object.values(state.status),done=vals.filter(x=>x==='mastered').length,active=vals.filter(x=>x&&x!=='not_started'&&x!=='mastered').length;progressText.textContent=t().dominated(done);studyCount.textContent=t().studying(active);progressBar.style.width=`${done/40*100}%`}
-function openLesson(n){current=n;saveLocal();renderNav(search.value);renderContent();sidebar.classList.remove('open');scrollTo({top:0,behavior:'smooth'})}
+function requestSignIn(targetLesson=1){
+ state.resumeAfterOnboarding=targetLesson>0?targetLesson:1;
+ current=0;
+ state.current=0;
+ saveLocal();
+ renderNav(search.value);
+ renderContent();
+ authMsg.textContent=state.lang==='es'?'Para comenzar las lecciones necesitas iniciar sesión o crear tu propia cuenta.':'To begin the lessons, sign in or create your own account.';
+ authModal.classList.add('open');
+}
+function completeOnboarding(){
+ if(!user){requestSignIn(1);return}
+ state.onboardingCompleted=true;
+ state.onboardingVersion=ONBOARDING_VERSION;
+ current=1;
+ state.current=1;
+ saveLocal();
+ renderAll();
+ scrollTo({top:0,behavior:'smooth'});
+}
+function openLesson(n){
+ if(n>0&&!user){requestSignIn(n);return}
+ current=n;
+ saveLocal();
+ renderNav(search.value);
+ renderContent();
+ sidebar.classList.remove('open');
+ scrollTo({top:0,behavior:'smooth'})
+}
 function renderAll(){renderProgress();renderNav(search.value);renderContent();renderTree()}
 function applyTheme(){document.documentElement.dataset.theme=state.theme||'light'}
 function applyLanguage(){document.documentElement.lang=state.lang;langSelect.value=state.lang;const tt=t();subtitle.textContent=tt.subtitle;document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=tt[e.dataset.i18n]||e.dataset.i18n);search.placeholder=tt.search;chipLessons.textContent=tt.lessons;chipSync.textContent=tt.sync;chipOffline.textContent=tt.offline;footerText.textContent=tt.footer;closeMenu.textContent=tt.close;openMenu.textContent='☰ '+(state.lang==='es'?'Lecciones':'Lessons');nextBtn.textContent=tt.next;
@@ -293,7 +321,7 @@ function renderTree(){const names={keter:['Keter','Corona / Crown'],chokhmah:['C
  Object.entries(pos).forEach(([k,[x,y]])=>{const info=state.tree[k]||{},level=info.level||'not_started',u=info.unlocked||level!=='not_started';const el=document.createElement('div');el.className=`sef ${level}`;el.dataset.sefirah=k;el.style.left=x+'px';el.style.top=y+'px';el.title=`${names[k][0]} — ${u?t().statuses[level]:t().locked}`;el.innerHTML=`<div><b>${names[k][0]}</b><small>${u?t().statuses[level]:t().locked}</small></div>`;tree.appendChild(el)})
 }
 statusSelect.onchange=()=>{if(current===0)return;state.status[current]=statusSelect.value;saveLocal();renderNav(search.value);cloudStatus(current,statusSelect.value)};
-nextBtn.onclick=()=>{if(current===0){state.onboardingCompleted=true;state.onboardingVersion=ONBOARDING_VERSION;openLesson(Number.isInteger(state.resumeAfterOnboarding)&&state.resumeAfterOnboarding>0?state.resumeAfterOnboarding:1)}else openLesson(Math.min(40,current+1))};search.oninput=()=>renderNav(search.value);openMenu.onclick=()=>sidebar.classList.add('open');closeMenu.onclick=()=>sidebar.classList.remove('open');
+nextBtn.onclick=()=>{if(current===0)completeOnboarding();else openLesson(Math.min(40,current+1))};search.oninput=()=>renderNav(search.value);openMenu.onclick=()=>sidebar.classList.add('open');closeMenu.onclick=()=>sidebar.classList.remove('open');
 themeBtn.onclick=()=>{state.theme=state.theme==='dark'?'light':'dark';applyTheme();saveLocal()};
 langSelect.onchange=()=>{state.lang=langSelect.value;saveLocal();applyLanguage();saveLang()};
 backupBtn.onclick=()=>backupModal.classList.add('open');timerBtn.onclick=()=>timerModal.classList.add('open');treeBtn.onclick=()=>{renderTree();treeModal.classList.add('open')};
@@ -302,7 +330,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-close]');i
 exportBtn.onclick=()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kabbalah-backup.json';a.click();URL.revokeObjectURL(a.href)};
 importFile.onchange=async()=>{try{const d=JSON.parse(await importFile.files[0].text());state={...state,...d};current=Number.isInteger(state.current)?state.current:0;saveLocal();applyTheme();applyLanguage();backupModal.classList.remove('open')}catch{alert(state.lang==='es'?'El archivo no es válido.':'The file is not valid.')}};
 
-accountBtn.onclick=async()=>{if(user){await sb.auth.signOut();user=null;switchLocalState(null);updateAccountUI()}else authModal.classList.add('open')};
+accountBtn.onclick=async()=>{if(user){await sb.auth.signOut();user=null;switchLocalState(null);current=0;state.current=0;saveLocal();updateAccountUI();renderAll()}else authModal.classList.add('open')};
 signInBtn.onclick=async()=>{authMsg.textContent='';const {data,error}=await sb.auth.signInWithPassword({email:authEmail.value.trim(),password:authPassword.value});if(error){authMsg.textContent=error.message;return}user=data.user;switchLocalState(user.id);authModal.classList.remove('open');updateAccountUI();await loadCloud()};
 signUpBtn.onclick=async()=>{authMsg.textContent='';const {error}=await sb.auth.signUp({email:authEmail.value.trim(),password:authPassword.value,options:{emailRedirectTo:location.origin+location.pathname}});authMsg.textContent=error?error.message:t().confirm};
 
@@ -311,11 +339,11 @@ startTimer.onclick=()=>{if(tick){clearInterval(tick);tick=null;startTimer.textCo
 resetTimer.onclick=()=>{clearInterval(tick);tick=null;seconds=1500;startTimer.textContent=t().start;showClock()};
 
 window.addEventListener('online',()=>{setSync(user?t().synced:t().local);if(user)loadCloud()});window.addEventListener('offline',()=>setSync(t().offlineState));
-sb.auth.onAuthStateChange((event,session)=>{const nextUser=session?.user||null;if(nextUser){if(!user||user.id!==nextUser.id)switchLocalState(nextUser.id);user=nextUser;updateAccountUI();if(event==='SIGNED_IN')loadCloud()}else{user=null;switchLocalState(null);updateAccountUI()}});
+sb.auth.onAuthStateChange((event,session)=>{const nextUser=session?.user||null;if(nextUser){if(!user||user.id!==nextUser.id)switchLocalState(nextUser.id);user=nextUser;updateAccountUI();if(event==='SIGNED_IN')loadCloud()}else{user=null;switchLocalState(null);current=0;state.current=0;saveLocal();updateAccountUI();renderAll()}});
 
 (async function init(){
  applyTheme();applyLanguage();showClock();
- const {data:{session}}=await sb.auth.getSession();user=session?.user||null;if(user)switchLocalState(user.id);else switchLocalState(null);updateAccountUI();if(user)await loadCloud();
+ const {data:{session}}=await sb.auth.getSession();user=session?.user||null;if(user){switchLocalState(user.id)}else{switchLocalState(null);current=0;state.current=0;saveLocal()}updateAccountUI();if(user)await loadCloud();
  if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
  setTimeout(()=>{splash.style.opacity='0';setTimeout(()=>splash.remove(),650)},2500);
 })();
